@@ -174,15 +174,25 @@ Demand forecasting in retail starts with understanding the series: is it station
 
 ```{python}
 #| label: fig-raw
-#| fig-cap: "Monthly turnover of sporting goods stores in France (index, 100 = average month of 2021, current euros), with its robust STL trend. The saw-tooth pattern is the yearly cycle: peaks every August and December, troughs in February and October-November. Orange points are Covid-period anomalies (|robust z| > 3.5)."
-fig, ax = plt.subplots()
-ax.plot(df.index, df["brut"], color=GREY, lw=1, label="Turnover of the month")
-ax.plot(tr.index, tr, color=SURF, lw=2.5, label="Trend (seasonality and noise removed)")
-a = anom[covid_mask]
-ax.scatter(a.index, np.exp(a["obs"]), s=40, color=ORANGE, edgecolor="white", lw=1.5, zorder=5,
-           label="Covid anomalies")
+#| fig-cap: "Monthly turnover of sporting goods stores in France (grey) and its long-term trend (blue, robust STL with the seasonal cycle and one-off shocks removed). Index: 100 = average month of 2021, current euros; 150 means sales 50 % above that average month. The shaded band marks the Covid lockdowns (March 2020 to May 2021). The within-year saw-tooth pattern is unpacked in @fig-seasonal."
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.axvspan(pd.Timestamp("2020-03-01"), pd.Timestamp("2021-05-01"), color=GRID, lw=0)
+ax.text(pd.Timestamp("2020-04-15"), 172, "Covid\nlockdowns", fontsize=9, color=INK2, ha="center")
+ax.plot(df.index, df["brut"], color=GREY, lw=1, label="Turnover of each month")
+ax.plot(tr.index, tr, color=SURF, lw=3, label="Long-term trend")
 ax.axhline(100, color=INK2, lw=0.8, ls=":")
+ax.text(pd.Timestamp("2011-06-01"), 102, "100 = average month of 2021", fontsize=9, color=INK2)
+ax.annotate(f"+{pct(cagr_pre)} % a year\n2000-2019", xy=(pd.Timestamp("2010-01-01"), tr.loc["2010-01-01"]),
+            xytext=(pd.Timestamp("2001-06-01"), 100), fontsize=12, color=SURF, weight="bold",
+            arrowprops=dict(arrowstyle="-", color=INK2, lw=0.8))
+ax.annotate(f"Post-Covid jump,\nthen +{pct(cagr_post)} % a year\n2022-2025",
+            xy=(pd.Timestamp("2024-06-01"), tr.loc["2024-06-01"]),
+            xytext=(pd.Timestamp("2009-06-01"), 145), fontsize=12, color=SURF, weight="bold",
+            arrowprops=dict(arrowstyle="-", color=INK2, lw=0.8))
+ax.set_ylim(10, 185)
 ax.set_ylabel("Turnover index (100 = average month of 2021)")
+ax.xaxis.set_major_locator(mdates.YearLocator(4))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 ax.legend(loc="upper left")
 plt.show()
 ```
@@ -257,16 +267,29 @@ Change-point detection (PELT, RBF cost) on the year-on-year trend growth finds b
 
 ```{python}
 #| label: fig-seasonal
-#| fig-cap: "Average seasonal component by month and period (deviation from trend, %)."
+#| fig-cap: "Average seasonal effect of each month in 2022-2026 (bars): how far sales sit above or below the year's trend. Circles show the same month averaged over 2010-2019. August has grown, December has shrunk and the November trough has become shallower."
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+rec, old = prof["2022-2026"].values, prof["2010-2019"].values
 x = np.arange(12)
-w = 0.27
-fig, ax = plt.subplots()
-for i, (col, c) in enumerate(zip(prof.columns, [FOAM, LIGHT, SURF])):
-    ax.bar(x + (i - 1) * w, prof[col], w * 0.95, color=c, label=col)
-ax.axhline(0, color=INK2, lw=0.8)
+fig, ax = plt.subplots(figsize=(9, 6.2))
+ax.bar(x, rec, 0.7, color=[SURF if v > 0 else LIGHT for v in rec], label="2022-2026")
+ax.scatter(x, old, s=55, facecolor="white", edgecolor=DEEP, lw=1.6, zorder=5, label="Same month, 2010-2019 average")
+ax.axhline(0, color=INK2, lw=0.9)
+
+def lab(i, txt, up=True):
+    v = rec[i]
+    y = (max(v, old[i]) + 2) if up else (min(v, old[i]) - 2)
+    ax.text(i, y, txt, ha="center", va="bottom" if up else "top", fontsize=9.5, color="#101322", linespacing=1.25)
+
+lab(7, f"{rec[7]:+.0f} %\nBack to school,\nsummer holidays")
+lab(11, f"{rec[11]:+.0f} %\nChristmas")
+lab(5, f"{rec[5]:+.0f} %\nSummer,\nsummer sales")
+lab(1, f"{rec[1]:+.0f} %\nShort month,\nafter holidays", up=False)
+lab(10, f"{rec[10]:+.0f} %\nPre-Christmas lull,\nBlack Friday\nnarrows it\n(was {old[10]:+.0f} %)", up=False)
 ax.set_xticks(x, months)
-ax.set_ylabel("Deviation from trend (%)")
+ax.set_ylim(-34, 48)
+ax.set_ylabel("Sales vs. the year's trend (%)")
+ax.grid(axis="x", visible=False)
 ax.legend(loc="upper left")
 plt.show()
 ```
