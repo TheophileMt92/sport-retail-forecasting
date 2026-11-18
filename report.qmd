@@ -31,6 +31,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
+from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from statsmodels.tsa.stattools import adfuller, kpss
@@ -431,11 +432,12 @@ A 12-month forecast is what replenishment needs, but strategy needs the longer v
 #| echo: false
 H_LT = 60
 sf_lt = StatsForecast(models=[AutoETS(season_length=12)], freq="MS", n_jobs=1)
-fc_lt = sf_lt.forecast(df=sf_df(clean), h=H_LT, level=[80, 95])
+fc_lt = sf_lt.forecast(df=sf_df(clean), h=H_LT + 6, level=[80, 95])  # 6 extra months for smoothing
 for c in fc_lt.columns:
     if c not in ("unique_id", "ds"):
         fc_lt[c] = np.exp(fc_lt[c])
-fc_lt = fc_lt.drop(columns="unique_id", errors="ignore").set_index("ds")
+fc_ext = fc_lt.drop(columns="unique_id", errors="ignore").set_index("ds")
+fc_lt = fc_ext.iloc[:H_LT]
 try:
     ets_spec = sf_lt.fit(df=sf_df(clean)).fitted_[0, 0].model_["method"]
 except Exception:
@@ -443,7 +445,14 @@ except Exception:
 yr_lt = fc_lt.groupby(fc_lt.index.year).mean()
 last_full = yr_lt.index[-2] if fc_lt.index[-1].month < 12 else yr_lt.index[-1]
 lt_mid, lt_lo, lt_hi = yr_lt.loc[last_full, ["AutoETS", "AutoETS-lo-80", "AutoETS-hi-80"]]
-lt_smooth = fc_lt["AutoETS"].rolling(12, center=True, min_periods=6).mean()
+# Forecast trend: 12-month centred moving average of the forecast, padded with the last
+# 6 observed months on the left and 6 extra forecast months on the right, so that the
+# window always holds a full year and no seasonal month is over-represented at the edges.
+def deseas(c):
+    pad = pd.Series(df["brut"].iloc[-6:].values, index=df.index[-6:])
+    full = pd.concat([pad, fc_ext[c]])
+    return full.rolling(12, center=True).mean().reindex(fc_lt.index)
+lt_smooth = deseas("AutoETS")
 ```
 
 ```{python}
@@ -458,7 +467,7 @@ ax.axvspan(fc_lt.index[0], fc_lt.index[-1], color="#f7f8fd", lw=0)
 ax.text(fc_lt.index[0] + pd.DateOffset(months=30), 178, "Forecast", fontsize=12, color=INK2, ha="center", weight="bold")
 ax.plot(df.index, df["brut"], color=GREY, lw=1.1, label="Turnover of each month")
 ax.plot(tr.index, tr, color=SURF, lw=3.5, label="Long-term trend")
-sm = lambda c: fc_lt[c].rolling(12, center=True, min_periods=6).mean()
+sm = deseas
 ax.plot(fc_lt.index, fc_lt["AutoETS"], color=LIGHT, lw=1.1, label="Forecast, month by month")
 ax.fill_between(fc_lt.index, sm("AutoETS-lo-95"), sm("AutoETS-hi-95"), color=FOAM, alpha=0.8, lw=0, label="95 % interval (trend)")
 ax.fill_between(fc_lt.index, sm("AutoETS-lo-80"), sm("AutoETS-hi-80"), color=LIGHT, alpha=0.45, lw=0, label="80 % interval (trend)")
@@ -478,6 +487,8 @@ ax.tick_params(labelsize=13)
 ax.xaxis.set_major_locator(mdates.YearLocator(4))
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 ax.legend(loc="upper left", fontsize=11, ncol=2)
+Path("figures").mkdir(exist_ok=True)
+fig.savefig("figures/linkedin_outlook.png", dpi=150)
 plt.show()
 ```
 
