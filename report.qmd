@@ -452,15 +452,16 @@ lt_smooth = fc_lt["AutoETS"].rolling(12, center=True, min_periods=6).mean()
 fig, ax = poster("Sporting goods stores in France:", "the plateau is set to last",
                  f"Monthly sales of specialised sporting goods stores, 1999 to {last.year}, and a five-year forecast\n"
                  f"to {fc_lt.index[-1].strftime('%B %Y')} (damped-trend ETS, Covid months neutralised). Index: 100 = average\n"
-                 "month of 2021, current euros. Shaded: 80 % and 95 % prediction intervals.")
+                 "month of 2021, current euros. Shaded: 80 % and 95 % intervals around the forecast trend.")
 ax.axvspan(pd.Timestamp("2020-03-01"), pd.Timestamp("2021-05-01"), color=GRID, lw=0)
 ax.axvspan(fc_lt.index[0], fc_lt.index[-1], color="#f7f8fd", lw=0)
 ax.text(fc_lt.index[0] + pd.DateOffset(months=30), 178, "Forecast", fontsize=12, color=INK2, ha="center", weight="bold")
 ax.plot(df.index, df["brut"], color=GREY, lw=1.1, label="Turnover of each month")
 ax.plot(tr.index, tr, color=SURF, lw=3.5, label="Long-term trend")
-ax.fill_between(fc_lt.index, fc_lt["AutoETS-lo-95"], fc_lt["AutoETS-hi-95"], color=FOAM, lw=0, label="95 % interval")
-ax.fill_between(fc_lt.index, fc_lt["AutoETS-lo-80"], fc_lt["AutoETS-hi-80"], color=LIGHT, alpha=0.55, lw=0, label="80 % interval")
-ax.plot(fc_lt.index, fc_lt["AutoETS"], color=MID, lw=1.1, label="Forecast, month by month")
+sm = lambda c: fc_lt[c].rolling(12, center=True, min_periods=6).mean()
+ax.plot(fc_lt.index, fc_lt["AutoETS"], color=LIGHT, lw=1.1, label="Forecast, month by month")
+ax.fill_between(fc_lt.index, sm("AutoETS-lo-95"), sm("AutoETS-hi-95"), color=FOAM, alpha=0.8, lw=0, label="95 % interval (trend)")
+ax.fill_between(fc_lt.index, sm("AutoETS-lo-80"), sm("AutoETS-hi-80"), color=LIGHT, alpha=0.45, lw=0, label="80 % interval (trend)")
 ax.plot(lt_smooth.index, lt_smooth, color=SURF, lw=3.5, ls=(0, (2, 1.2)), label="Forecast trend")
 ax.axhline(100, color=INK2, lw=0.8, ls=":")
 ax.annotate(f"+{pct(cagr_pre)} % a year\n2000-2019", xy=(pd.Timestamp("2010-01-01"), tr.loc["2010-01-01"]),
