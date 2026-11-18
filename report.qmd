@@ -422,23 +422,67 @@ What the foundation model brings:
 
 One caveat: public pretraining corpora may include INSEE series, so a zero-shot result on public data can be optimistic.
 
-## 6. Forecast to `{python} fc['ds'].max().strftime('%B %Y')`
+## 6. Five-year outlook
+
+A 12-month forecast is what replenishment needs, but strategy needs the longer view. For five years ahead, repeating last year is no longer sensible: the model has to carry the trend. ETS with a damped trend, fitted automatically on the Covid-neutralised log series, is the second-best model in the backtest and the natural choice here: it lets the recent plateau continue unless the data say otherwise, and its prediction intervals widen with the horizon.
+
+```{python}
+#| label: lt-forecast
+#| echo: false
+H_LT = 60
+sf_lt = StatsForecast(models=[AutoETS(season_length=12)], freq="MS", n_jobs=1)
+fc_lt = sf_lt.forecast(df=sf_df(clean), h=H_LT, level=[80, 95])
+for c in fc_lt.columns:
+    if c not in ("unique_id", "ds"):
+        fc_lt[c] = np.exp(fc_lt[c])
+fc_lt = fc_lt.drop(columns="unique_id", errors="ignore").set_index("ds")
+try:
+    ets_spec = sf_lt.fit(df=sf_df(clean)).fitted_[0, 0].model_["method"]
+except Exception:
+    ets_spec = "ETS(A,Ad,A)"
+yr_lt = fc_lt.groupby(fc_lt.index.year).mean()
+last_full = yr_lt.index[-2] if fc_lt.index[-1].month < 12 else yr_lt.index[-1]
+lt_mid, lt_lo, lt_hi = yr_lt.loc[last_full, ["AutoETS", "AutoETS-lo-80", "AutoETS-hi-80"]]
+lt_smooth = fc_lt["AutoETS"].rolling(12, center=True, min_periods=6).mean()
+```
 
 ```{python}
 #| label: fig-forecast
-#| fig-cap: "Twelve-month forecast from the best backtested model, with 80 % and 95 % prediction intervals."
-hist = df.loc["2022-01-01":, "brut"]
-fig, ax = plt.subplots()
-ax.plot(hist.index, hist, color=INK2, lw=1.8, label="Observed")
-ax.fill_between(fc["ds"], fc[f"{best_key}-lo-95"], fc[f"{best_key}-hi-95"], color=FOAM, label="95 % interval")
-ax.fill_between(fc["ds"], fc[f"{best_key}-lo-80"], fc[f"{best_key}-hi-80"], color=LIGHT, label="80 % interval")
-ax.plot(fc["ds"], fc[best_key], color=SURF, lw=2.5, label=f"Forecast ({best.lower()})")
-ax.set_ylabel("Index (2021 = 100)")
-ax.legend(loc="upper left")
+#| fig-cap: "Five-year outlook: monthly turnover index with its long-term trend, extended by a damped-trend ETS forecast with 80 % and 95 % prediction intervals."
+fig, ax = poster("Sporting goods stores in France:", "the plateau is set to last",
+                 f"Monthly sales of specialised sporting goods stores, 1999 to {last.year}, and a five-year forecast\n"
+                 f"to {fc_lt.index[-1].strftime('%B %Y')} (damped-trend ETS, Covid months neutralised). Index: 100 = average\n"
+                 "month of 2021, current euros. Shaded: 80 % and 95 % prediction intervals.")
+ax.axvspan(pd.Timestamp("2020-03-01"), pd.Timestamp("2021-05-01"), color=GRID, lw=0)
+ax.axvspan(fc_lt.index[0], fc_lt.index[-1], color="#f7f8fd", lw=0)
+ax.text(fc_lt.index[0] + pd.DateOffset(months=30), 178, "Forecast", fontsize=12, color=INK2, ha="center", weight="bold")
+ax.plot(df.index, df["brut"], color=GREY, lw=1.1, label="Turnover of each month")
+ax.plot(tr.index, tr, color=SURF, lw=3.5, label="Long-term trend")
+ax.fill_between(fc_lt.index, fc_lt["AutoETS-lo-95"], fc_lt["AutoETS-hi-95"], color=FOAM, lw=0, label="95 % interval")
+ax.fill_between(fc_lt.index, fc_lt["AutoETS-lo-80"], fc_lt["AutoETS-hi-80"], color=LIGHT, alpha=0.55, lw=0, label="80 % interval")
+ax.plot(fc_lt.index, fc_lt["AutoETS"], color=MID, lw=1.1, label="Forecast, month by month")
+ax.plot(lt_smooth.index, lt_smooth, color=SURF, lw=3.5, ls=(0, (2, 1.2)), label="Forecast trend")
+ax.axhline(100, color=INK2, lw=0.8, ls=":")
+ax.annotate(f"+{pct(cagr_pre)} % a year\n2000-2019", xy=(pd.Timestamp("2010-01-01"), tr.loc["2010-01-01"]),
+            xytext=(pd.Timestamp("2001-06-01"), 100), fontsize=15, color=SURF, weight="bold",
+            arrowprops=dict(arrowstyle="-", color=INK2, lw=1))
+ax.annotate(f"{last_full}: about {lt_mid:.0f}\n(80 % range {lt_lo:.0f} to {lt_hi:.0f})",
+            xy=(pd.Timestamp(f"{last_full}-07-01"), lt_smooth.loc[f"{last_full}-07-01"]),
+            xytext=(pd.Timestamp("2009-06-01"), 150), fontsize=15, color=SURF, weight="bold",
+            arrowprops=dict(arrowstyle="-", color=INK2, lw=1))
+ax.set_ylim(10, 185)
+ax.set_xlim(df.index[0] - pd.DateOffset(months=6), fc_lt.index[-1] + pd.DateOffset(months=6))
+ax.set_ylabel("Turnover index (100 = average month of 2021)", fontsize=13)
+ax.tick_params(labelsize=13)
+ax.xaxis.set_major_locator(mdates.YearLocator(4))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+ax.legend(loc="upper left", fontsize=11, ncol=2)
 plt.show()
 ```
 
-The December `{python} dec_row['ds'].year` peak is expected at `{python} pct(dec_row[best_key], 0)` (80 % interval `{python} pct(dec_row[f"{best_key}-lo-80"], 0)` to `{python} pct(dec_row[f"{best_key}-hi-80"], 0)`).
+The selected model is `{python} ets_spec`: additive error, damped additive trend and additive seasonality on the log scale. In `{python} last_full`, the index averages about `{python} pct(lt_mid, 0)` (80 % interval `{python} pct(lt_lo, 0)` to `{python} pct(lt_hi, 0)`), against `{python} pct(df.loc[str(last.year - 1), 'brut'].mean(), 0)` in `{python} last.year - 1`: no return to the pre-Covid growth rate is expected from the data alone. A new growth phase would have to come from drivers outside this series, such as prices, new sports or market share.
+
+The 80 % interval is wide, and that is the point: after a regime change like Covid, five-year forecasts of an aggregate series carry real uncertainty, and a single number would hide it. For the next 12 months, the seasonal naive forecast from section 5 remains the more accurate choice: the December `{python} dec_row['ds'].year` peak is expected at `{python} pct(dec_row[best_key], 0)` (80 % interval `{python} pct(dec_row[f"{best_key}-lo-80"], 0)` to `{python} pct(dec_row[f"{best_key}-hi-80"], 0)`).
 
 ## Limitations and next steps
 
