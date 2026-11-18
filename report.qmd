@@ -277,16 +277,17 @@ for i, (col, c) in enumerate(zip(periods, [FOAM, LIGHT, SURF])):
     ax.bar(x + (i - 1) * w, prof[col], w * 0.92, color=c, label=col)
 ax.axhline(0, color=INK2, lw=0.9)
 
-def lab(m, txt, up=True):
+def lab(m, txt, up=True, y=None):
     vals = prof.loc[m, periods].values
-    y = (vals.max() + 2) if up else (vals.min() - 2)
+    if y is None:
+        y = (vals.max() + 2) if up else (vals.min() - 2)
     seq = " / ".join(f"{v:+.0f}" for v in vals)
     ax.text(m - 1, y, f"{seq} %\n{txt}", ha="center", va="bottom" if up else "top",
             fontsize=9, color="#101322", linespacing=1.25)
 
 lab(8, "Back to school,\nsummer holidays")
 lab(12, "Christmas")
-lab(6, "Summer,\nsummer sales")
+lab(6, "Early summer,\nsales season", y=15)
 lab(2, "Short month,\nafter holidays", up=False)
 lab(11, "Pre-Christmas lull,\nBlack Friday", up=False)
 ax.set_xticks(x, months)
