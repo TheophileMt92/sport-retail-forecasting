@@ -56,7 +56,7 @@ def pct(x, d=1):
     return f"{x:.{d}f}"
 
 SRC = ("Source: INSEE, turnover index, retail sale of sporting equipment in specialised stores (NAF 47.64), unadjusted.\n"
-       "Robust STL decomposition. Analysis: Théophile Mouton, DataSphere Analytics")
+       "Analysis: Théophile Mouton")
 
 def poster(t1, t2, sub, figsize=(10.8, 10.8)):
     """Square figure with a two-line title, subtitle and source, as used for LinkedIn."""
