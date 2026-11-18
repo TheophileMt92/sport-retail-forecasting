@@ -39,9 +39,9 @@ import ruptures as rpt
 from statsforecast import StatsForecast
 from statsforecast.models import SeasonalNaive, AutoETS, AutoARIMA, AutoTheta
 
-# DataSphere palette
-DEEP, MID, SURF, LIGHT, FOAM = "#062d4a", "#0d4f7a", "#1a7fa8", "#4eb8d4", "#c8eaf4"
-GREY, ORANGE, INK2, GRID = "#b5b4ae", "#eb6834", "#445566", "#e6e5e1"
+# Cobalt palette (matches template/custom.css)
+DEEP, MID, SURF, LIGHT, FOAM = "#1b2268", "#2b36a0", "#3643ba", "#8a92db", "#d7daf3"
+GREY, ORANGE, INK2, GRID = "#b5b4ae", "#eb6834", "#4a4f66", "#e4e6f0"
 plt.rcParams.update({
     "figure.figsize": (9, 5), "figure.dpi": 130, "font.size": 11,
     "axes.edgecolor": INK2, "axes.labelcolor": INK2,
