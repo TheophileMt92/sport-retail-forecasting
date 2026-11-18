@@ -646,9 +646,18 @@ h2 {
 font-size: 1.75rem;
 text-transform: uppercase;
 letter-spacing: .01em;
-padding: .15rem 0 .15rem .9rem;
-border-left: 6px solid var(--cobalt);
 }
+
+h2::before {
+content: "";
+display: inline-block;
+width: 6px;
+height: .95em;
+margin-right: .7rem;
+vertical-align: -0.08em;
+background: var(--cobalt);
+}
+.callout h2::before, #toc-title::before, nav[role="doc-toc"] h2::before { display: none; }
 h3 { font-size: 1.3rem; color: var(--cobalt); }
 h4 { font-size: 1.05rem; color: var(--text-secondary); }
 strong { font-weight: 700; color: var(--text-primary); }
@@ -996,34 +1005,34 @@ Table 1: Unit root (ADF) and stationarity (KPSS) tests on the log series. KPSS 
 <style type="text/css">
 </style>
 
-<table id="T_385c2" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
+<table id="T_985df" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
 <thead>
 <tr class="header">
 <th class="blank level0" data-quarto-table-cell-role="th"> </th>
-<th id="T_385c2_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">ADF p-value</th>
-<th id="T_385c2_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">KPSS p-value</th>
+<th id="T_985df_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">ADF p-value</th>
+<th id="T_985df_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">KPSS p-value</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_385c2_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">log level</td>
-<td id="T_385c2_row0_col0" class="data row0 col0">0.395</td>
-<td id="T_385c2_row0_col1" class="data row0 col1">0.010</td>
+<td id="T_985df_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">log level</td>
+<td id="T_985df_row0_col0" class="data row0 col0">0.395</td>
+<td id="T_985df_row0_col1" class="data row0 col1">0.010</td>
 </tr>
 <tr class="even">
-<td id="T_385c2_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">first difference</td>
-<td id="T_385c2_row1_col0" class="data row1 col0">0.000</td>
-<td id="T_385c2_row1_col1" class="data row1 col1">0.100</td>
+<td id="T_985df_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">first difference</td>
+<td id="T_985df_row1_col0" class="data row1 col0">0.000</td>
+<td id="T_985df_row1_col1" class="data row1 col1">0.100</td>
 </tr>
 <tr class="odd">
-<td id="T_385c2_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">seasonal difference (12)</td>
-<td id="T_385c2_row2_col0" class="data row2 col0">0.000</td>
-<td id="T_385c2_row2_col1" class="data row2 col1">0.100</td>
+<td id="T_985df_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">seasonal difference (12)</td>
+<td id="T_985df_row2_col0" class="data row2 col0">0.000</td>
+<td id="T_985df_row2_col1" class="data row2 col1">0.100</td>
 </tr>
 <tr class="even">
-<td id="T_385c2_level0_row3" class="row_heading level0 row3" data-quarto-table-cell-role="th">both differences</td>
-<td id="T_385c2_row3_col0" class="data row3 col0">0.000</td>
-<td id="T_385c2_row3_col1" class="data row3 col1">0.100</td>
+<td id="T_985df_level0_row3" class="row_heading level0 row3" data-quarto-table-cell-role="th">both differences</td>
+<td id="T_985df_row3_col0" class="data row3 col0">0.000</td>
+<td id="T_985df_row3_col1" class="data row3 col1">0.100</td>
 </tr>
 </tbody>
 </table>
@@ -1083,12 +1092,12 @@ Table 2: Months flagged as anomalous, with the deviation from the trend plus se
 <style type="text/css">
 </style>
 
-<table id="T_a37b2" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
+<table id="T_d866c" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
 <thead>
 <tr class="header">
 <th class="blank level0" data-quarto-table-cell-role="th"> </th>
-<th id="T_a37b2_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Robust z-score</th>
-<th id="T_a37b2_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Deviation from expected (%)</th>
+<th id="T_d866c_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Robust z-score</th>
+<th id="T_d866c_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Deviation from expected (%)</th>
 </tr>
 <tr class="odd">
 <th class="index_name level0" data-quarto-table-cell-role="th">ds</th>
@@ -1098,124 +1107,124 @@ Table 2: Months flagged as anomalous, with the deviation from the trend plus se
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_a37b2_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">1999-07</td>
-<td id="T_a37b2_row0_col0" class="data row0 col0">5.1</td>
-<td id="T_a37b2_row0_col1" class="data row0 col1">9.9</td>
+<td id="T_d866c_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">1999-07</td>
+<td id="T_d866c_row0_col0" class="data row0 col0">5.1</td>
+<td id="T_d866c_row0_col1" class="data row0 col1">9.9</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">1999-10</td>
-<td id="T_a37b2_row1_col0" class="data row1 col0">7.9</td>
-<td id="T_a37b2_row1_col1" class="data row1 col1">15.5</td>
+<td id="T_d866c_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">1999-10</td>
+<td id="T_d866c_row1_col0" class="data row1 col0">7.9</td>
+<td id="T_d866c_row1_col1" class="data row1 col1">15.5</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">2000-10</td>
-<td id="T_a37b2_row2_col0" class="data row2 col0">4.9</td>
-<td id="T_a37b2_row2_col1" class="data row2 col1">9.5</td>
+<td id="T_d866c_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">2000-10</td>
+<td id="T_d866c_row2_col0" class="data row2 col0">4.9</td>
+<td id="T_d866c_row2_col1" class="data row2 col1">9.5</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row3" class="row_heading level0 row3" data-quarto-table-cell-role="th">2003-11</td>
-<td id="T_a37b2_row3_col0" class="data row3 col0">-5.1</td>
-<td id="T_a37b2_row3_col1" class="data row3 col1">-8.7</td>
+<td id="T_d866c_level0_row3" class="row_heading level0 row3" data-quarto-table-cell-role="th">2003-11</td>
+<td id="T_d866c_row3_col0" class="data row3 col0">-5.1</td>
+<td id="T_d866c_row3_col1" class="data row3 col1">-8.7</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row4" class="row_heading level0 row4" data-quarto-table-cell-role="th">2010-07</td>
-<td id="T_a37b2_row4_col0" class="data row4 col0">3.5</td>
-<td id="T_a37b2_row4_col1" class="data row4 col1">6.7</td>
+<td id="T_d866c_level0_row4" class="row_heading level0 row4" data-quarto-table-cell-role="th">2010-07</td>
+<td id="T_d866c_row4_col0" class="data row4 col0">3.5</td>
+<td id="T_d866c_row4_col1" class="data row4 col1">6.7</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row5" class="row_heading level0 row5" data-quarto-table-cell-role="th">2011-01</td>
-<td id="T_a37b2_row5_col0" class="data row5 col0">-5.7</td>
-<td id="T_a37b2_row5_col1" class="data row5 col1">-9.7</td>
+<td id="T_d866c_level0_row5" class="row_heading level0 row5" data-quarto-table-cell-role="th">2011-01</td>
+<td id="T_d866c_row5_col0" class="data row5 col0">-5.7</td>
+<td id="T_d866c_row5_col1" class="data row5 col1">-9.7</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row6" class="row_heading level0 row6" data-quarto-table-cell-role="th">2013-11</td>
-<td id="T_a37b2_row6_col0" class="data row6 col0">4.0</td>
-<td id="T_a37b2_row6_col1" class="data row6 col1">7.6</td>
+<td id="T_d866c_level0_row6" class="row_heading level0 row6" data-quarto-table-cell-role="th">2013-11</td>
+<td id="T_d866c_row6_col0" class="data row6 col0">4.0</td>
+<td id="T_d866c_row6_col1" class="data row6 col1">7.6</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row7" class="row_heading level0 row7" data-quarto-table-cell-role="th">2018-11</td>
-<td id="T_a37b2_row7_col0" class="data row7 col0">-4.4</td>
-<td id="T_a37b2_row7_col1" class="data row7 col1">-7.5</td>
+<td id="T_d866c_level0_row7" class="row_heading level0 row7" data-quarto-table-cell-role="th">2018-11</td>
+<td id="T_d866c_row7_col0" class="data row7 col0">-4.4</td>
+<td id="T_d866c_row7_col1" class="data row7 col1">-7.5</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row8" class="row_heading level0 row8" data-quarto-table-cell-role="th">2019-03</td>
-<td id="T_a37b2_row8_col0" class="data row8 col0">5.2</td>
-<td id="T_a37b2_row8_col1" class="data row8 col1">10.1</td>
+<td id="T_d866c_level0_row8" class="row_heading level0 row8" data-quarto-table-cell-role="th">2019-03</td>
+<td id="T_d866c_row8_col0" class="data row8 col0">5.2</td>
+<td id="T_d866c_row8_col1" class="data row8 col1">10.1</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row9" class="row_heading level0 row9" data-quarto-table-cell-role="th">2020-03</td>
-<td id="T_a37b2_row9_col0" class="data row9 col0">-34.3</td>
-<td id="T_a37b2_row9_col1" class="data row9 col1">-46.1</td>
+<td id="T_d866c_level0_row9" class="row_heading level0 row9" data-quarto-table-cell-role="th">2020-03</td>
+<td id="T_d866c_row9_col0" class="data row9 col0">-34.3</td>
+<td id="T_d866c_row9_col1" class="data row9 col1">-46.1</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row10" class="row_heading level0 row10" data-quarto-table-cell-role="th">2020-04</td>
-<td id="T_a37b2_row10_col0" class="data row10 col0">-83.6</td>
-<td id="T_a37b2_row10_col1" class="data row10 col1">-77.9</td>
+<td id="T_d866c_level0_row10" class="row_heading level0 row10" data-quarto-table-cell-role="th">2020-04</td>
+<td id="T_d866c_row10_col0" class="data row10 col0">-83.6</td>
+<td id="T_d866c_row10_col1" class="data row10 col1">-77.9</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row11" class="row_heading level0 row11" data-quarto-table-cell-role="th">2020-06</td>
-<td id="T_a37b2_row11_col0" class="data row11 col0">9.5</td>
-<td id="T_a37b2_row11_col1" class="data row11 col1">18.9</td>
+<td id="T_d866c_level0_row11" class="row_heading level0 row11" data-quarto-table-cell-role="th">2020-06</td>
+<td id="T_d866c_row11_col0" class="data row11 col0">9.5</td>
+<td id="T_d866c_row11_col1" class="data row11 col1">18.9</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row12" class="row_heading level0 row12" data-quarto-table-cell-role="th">2020-07</td>
-<td id="T_a37b2_row12_col0" class="data row12 col0">8.7</td>
-<td id="T_a37b2_row12_col1" class="data row12 col1">17.3</td>
+<td id="T_d866c_level0_row12" class="row_heading level0 row12" data-quarto-table-cell-role="th">2020-07</td>
+<td id="T_d866c_row12_col0" class="data row12 col0">8.7</td>
+<td id="T_d866c_row12_col1" class="data row12 col1">17.3</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row13" class="row_heading level0 row13" data-quarto-table-cell-role="th">2020-08</td>
-<td id="T_a37b2_row13_col0" class="data row13 col0">10.2</td>
-<td id="T_a37b2_row13_col1" class="data row13 col1">20.5</td>
+<td id="T_d866c_level0_row13" class="row_heading level0 row13" data-quarto-table-cell-role="th">2020-08</td>
+<td id="T_d866c_row13_col0" class="data row13 col0">10.2</td>
+<td id="T_d866c_row13_col1" class="data row13 col1">20.5</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row14" class="row_heading level0 row14" data-quarto-table-cell-role="th">2020-09</td>
-<td id="T_a37b2_row14_col0" class="data row14 col0">6.5</td>
-<td id="T_a37b2_row14_col1" class="data row14 col1">12.7</td>
+<td id="T_d866c_level0_row14" class="row_heading level0 row14" data-quarto-table-cell-role="th">2020-09</td>
+<td id="T_d866c_row14_col0" class="data row14 col0">6.5</td>
+<td id="T_d866c_row14_col1" class="data row14 col1">12.7</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row15" class="row_heading level0 row15" data-quarto-table-cell-role="th">2020-10</td>
-<td id="T_a37b2_row15_col0" class="data row15 col0">6.4</td>
-<td id="T_a37b2_row15_col1" class="data row15 col1">12.5</td>
+<td id="T_d866c_level0_row15" class="row_heading level0 row15" data-quarto-table-cell-role="th">2020-10</td>
+<td id="T_d866c_row15_col0" class="data row15 col0">6.4</td>
+<td id="T_d866c_row15_col1" class="data row15 col1">12.5</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row16" class="row_heading level0 row16" data-quarto-table-cell-role="th">2020-11</td>
-<td id="T_a37b2_row16_col0" class="data row16 col0">-31.0</td>
-<td id="T_a37b2_row16_col1" class="data row16 col1">-42.8</td>
+<td id="T_d866c_level0_row16" class="row_heading level0 row16" data-quarto-table-cell-role="th">2020-11</td>
+<td id="T_d866c_row16_col0" class="data row16 col0">-31.0</td>
+<td id="T_d866c_row16_col1" class="data row16 col1">-42.8</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row17" class="row_heading level0 row17" data-quarto-table-cell-role="th">2020-12</td>
-<td id="T_a37b2_row17_col0" class="data row17 col0">8.7</td>
-<td id="T_a37b2_row17_col1" class="data row17 col1">17.2</td>
+<td id="T_d866c_level0_row17" class="row_heading level0 row17" data-quarto-table-cell-role="th">2020-12</td>
+<td id="T_d866c_row17_col0" class="data row17 col0">8.7</td>
+<td id="T_d866c_row17_col1" class="data row17 col1">17.2</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row18" class="row_heading level0 row18" data-quarto-table-cell-role="th">2021-04</td>
-<td id="T_a37b2_row18_col0" class="data row18 col0">-21.1</td>
-<td id="T_a37b2_row18_col1" class="data row18 col1">-31.6</td>
+<td id="T_d866c_level0_row18" class="row_heading level0 row18" data-quarto-table-cell-role="th">2021-04</td>
+<td id="T_d866c_row18_col0" class="data row18 col0">-21.1</td>
+<td id="T_d866c_row18_col1" class="data row18 col1">-31.6</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row19" class="row_heading level0 row19" data-quarto-table-cell-role="th">2021-06</td>
-<td id="T_a37b2_row19_col0" class="data row19 col0">11.5</td>
-<td id="T_a37b2_row19_col1" class="data row19 col1">23.3</td>
+<td id="T_d866c_level0_row19" class="row_heading level0 row19" data-quarto-table-cell-role="th">2021-06</td>
+<td id="T_d866c_row19_col0" class="data row19 col0">11.5</td>
+<td id="T_d866c_row19_col1" class="data row19 col1">23.3</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row20" class="row_heading level0 row20" data-quarto-table-cell-role="th">2021-07</td>
-<td id="T_a37b2_row20_col0" class="data row20 col0">5.7</td>
-<td id="T_a37b2_row20_col1" class="data row20 col1">11.0</td>
+<td id="T_d866c_level0_row20" class="row_heading level0 row20" data-quarto-table-cell-role="th">2021-07</td>
+<td id="T_d866c_row20_col0" class="data row20 col0">5.7</td>
+<td id="T_d866c_row20_col1" class="data row20 col1">11.0</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row21" class="row_heading level0 row21" data-quarto-table-cell-role="th">2022-01</td>
-<td id="T_a37b2_row21_col0" class="data row21 col0">-4.6</td>
-<td id="T_a37b2_row21_col1" class="data row21 col1">-7.8</td>
+<td id="T_d866c_level0_row21" class="row_heading level0 row21" data-quarto-table-cell-role="th">2022-01</td>
+<td id="T_d866c_row21_col0" class="data row21 col0">-4.6</td>
+<td id="T_d866c_row21_col1" class="data row21 col1">-7.8</td>
 </tr>
 <tr class="odd">
-<td id="T_a37b2_level0_row22" class="row_heading level0 row22" data-quarto-table-cell-role="th">2022-07</td>
-<td id="T_a37b2_row22_col0" class="data row22 col0">-4.1</td>
-<td id="T_a37b2_row22_col1" class="data row22 col1">-6.9</td>
+<td id="T_d866c_level0_row22" class="row_heading level0 row22" data-quarto-table-cell-role="th">2022-07</td>
+<td id="T_d866c_row22_col0" class="data row22 col0">-4.1</td>
+<td id="T_d866c_row22_col1" class="data row22 col1">-6.9</td>
 </tr>
 <tr class="even">
-<td id="T_a37b2_level0_row23" class="row_heading level0 row23" data-quarto-table-cell-role="th">2023-09</td>
-<td id="T_a37b2_row23_col0" class="data row23 col0">4.1</td>
-<td id="T_a37b2_row23_col1" class="data row23 col1">7.9</td>
+<td id="T_d866c_level0_row23" class="row_heading level0 row23" data-quarto-table-cell-role="th">2023-09</td>
+<td id="T_d866c_row23_col0" class="data row23 col0">4.1</td>
+<td id="T_d866c_row23_col1" class="data row23 col1">7.9</td>
 </tr>
 </tbody>
 </table>
@@ -1299,69 +1308,69 @@ Table 3: Seasonal profile by period (deviation from trend, %).
 <style type="text/css">
 </style>
 
-<table id="T_ac80f" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
+<table id="T_22fb0" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
 <thead>
 <tr class="header">
 <th class="blank level0" data-quarto-table-cell-role="th"> </th>
-<th id="T_ac80f_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Jan</th>
-<th id="T_ac80f_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Feb</th>
-<th id="T_ac80f_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">Mar</th>
-<th id="T_ac80f_level0_col3" class="col_heading level0 col3" data-quarto-table-cell-role="th">Apr</th>
-<th id="T_ac80f_level0_col4" class="col_heading level0 col4" data-quarto-table-cell-role="th">May</th>
-<th id="T_ac80f_level0_col5" class="col_heading level0 col5" data-quarto-table-cell-role="th">Jun</th>
-<th id="T_ac80f_level0_col6" class="col_heading level0 col6" data-quarto-table-cell-role="th">Jul</th>
-<th id="T_ac80f_level0_col7" class="col_heading level0 col7" data-quarto-table-cell-role="th">Aug</th>
-<th id="T_ac80f_level0_col8" class="col_heading level0 col8" data-quarto-table-cell-role="th">Sep</th>
-<th id="T_ac80f_level0_col9" class="col_heading level0 col9" data-quarto-table-cell-role="th">Oct</th>
-<th id="T_ac80f_level0_col10" class="col_heading level0 col10" data-quarto-table-cell-role="th">Nov</th>
-<th id="T_ac80f_level0_col11" class="col_heading level0 col11" data-quarto-table-cell-role="th">Dec</th>
+<th id="T_22fb0_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Jan</th>
+<th id="T_22fb0_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Feb</th>
+<th id="T_22fb0_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">Mar</th>
+<th id="T_22fb0_level0_col3" class="col_heading level0 col3" data-quarto-table-cell-role="th">Apr</th>
+<th id="T_22fb0_level0_col4" class="col_heading level0 col4" data-quarto-table-cell-role="th">May</th>
+<th id="T_22fb0_level0_col5" class="col_heading level0 col5" data-quarto-table-cell-role="th">Jun</th>
+<th id="T_22fb0_level0_col6" class="col_heading level0 col6" data-quarto-table-cell-role="th">Jul</th>
+<th id="T_22fb0_level0_col7" class="col_heading level0 col7" data-quarto-table-cell-role="th">Aug</th>
+<th id="T_22fb0_level0_col8" class="col_heading level0 col8" data-quarto-table-cell-role="th">Sep</th>
+<th id="T_22fb0_level0_col9" class="col_heading level0 col9" data-quarto-table-cell-role="th">Oct</th>
+<th id="T_22fb0_level0_col10" class="col_heading level0 col10" data-quarto-table-cell-role="th">Nov</th>
+<th id="T_22fb0_level0_col11" class="col_heading level0 col11" data-quarto-table-cell-role="th">Dec</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_ac80f_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">1999-2009</td>
-<td id="T_ac80f_row0_col0" class="data row0 col0">+2</td>
-<td id="T_ac80f_row0_col1" class="data row0 col1">-17</td>
-<td id="T_ac80f_row0_col2" class="data row0 col2">-13</td>
-<td id="T_ac80f_row0_col3" class="data row0 col3">-2</td>
-<td id="T_ac80f_row0_col4" class="data row0 col4">+2</td>
-<td id="T_ac80f_row0_col5" class="data row0 col5">+6</td>
-<td id="T_ac80f_row0_col6" class="data row0 col6">+12</td>
-<td id="T_ac80f_row0_col7" class="data row0 col7">+25</td>
-<td id="T_ac80f_row0_col8" class="data row0 col8">+3</td>
-<td id="T_ac80f_row0_col9" class="data row0 col9">-16</td>
-<td id="T_ac80f_row0_col10" class="data row0 col10">-21</td>
-<td id="T_ac80f_row0_col11" class="data row0 col11">+33</td>
+<td id="T_22fb0_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">1999-2009</td>
+<td id="T_22fb0_row0_col0" class="data row0 col0">+2</td>
+<td id="T_22fb0_row0_col1" class="data row0 col1">-17</td>
+<td id="T_22fb0_row0_col2" class="data row0 col2">-13</td>
+<td id="T_22fb0_row0_col3" class="data row0 col3">-2</td>
+<td id="T_22fb0_row0_col4" class="data row0 col4">+2</td>
+<td id="T_22fb0_row0_col5" class="data row0 col5">+6</td>
+<td id="T_22fb0_row0_col6" class="data row0 col6">+12</td>
+<td id="T_22fb0_row0_col7" class="data row0 col7">+25</td>
+<td id="T_22fb0_row0_col8" class="data row0 col8">+3</td>
+<td id="T_22fb0_row0_col9" class="data row0 col9">-16</td>
+<td id="T_22fb0_row0_col10" class="data row0 col10">-21</td>
+<td id="T_22fb0_row0_col11" class="data row0 col11">+33</td>
 </tr>
 <tr class="even">
-<td id="T_ac80f_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">2010-2019</td>
-<td id="T_ac80f_row1_col0" class="data row1 col0">+2</td>
-<td id="T_ac80f_row1_col1" class="data row1 col1">-14</td>
-<td id="T_ac80f_row1_col2" class="data row1 col2">-13</td>
-<td id="T_ac80f_row1_col3" class="data row1 col3">-4</td>
-<td id="T_ac80f_row1_col4" class="data row1 col4">-2</td>
-<td id="T_ac80f_row1_col5" class="data row1 col5">+9</td>
-<td id="T_ac80f_row1_col6" class="data row1 col6">+7</td>
-<td id="T_ac80f_row1_col7" class="data row1 col7">+30</td>
-<td id="T_ac80f_row1_col8" class="data row1 col8">+0</td>
-<td id="T_ac80f_row1_col9" class="data row1 col9">-12</td>
-<td id="T_ac80f_row1_col10" class="data row1 col10">-17</td>
-<td id="T_ac80f_row1_col11" class="data row1 col11">+23</td>
+<td id="T_22fb0_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">2010-2019</td>
+<td id="T_22fb0_row1_col0" class="data row1 col0">+2</td>
+<td id="T_22fb0_row1_col1" class="data row1 col1">-14</td>
+<td id="T_22fb0_row1_col2" class="data row1 col2">-13</td>
+<td id="T_22fb0_row1_col3" class="data row1 col3">-4</td>
+<td id="T_22fb0_row1_col4" class="data row1 col4">-2</td>
+<td id="T_22fb0_row1_col5" class="data row1 col5">+9</td>
+<td id="T_22fb0_row1_col6" class="data row1 col6">+7</td>
+<td id="T_22fb0_row1_col7" class="data row1 col7">+30</td>
+<td id="T_22fb0_row1_col8" class="data row1 col8">+0</td>
+<td id="T_22fb0_row1_col9" class="data row1 col9">-12</td>
+<td id="T_22fb0_row1_col10" class="data row1 col10">-17</td>
+<td id="T_22fb0_row1_col11" class="data row1 col11">+23</td>
 </tr>
 <tr class="odd">
-<td id="T_ac80f_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">2022-2026</td>
-<td id="T_ac80f_row2_col0" class="data row2 col0">-1</td>
-<td id="T_ac80f_row2_col1" class="data row2 col1">-15</td>
-<td id="T_ac80f_row2_col2" class="data row2 col2">-11</td>
-<td id="T_ac80f_row2_col3" class="data row2 col3">-4</td>
-<td id="T_ac80f_row2_col4" class="data row2 col4">+0</td>
-<td id="T_ac80f_row2_col5" class="data row2 col5">+6</td>
-<td id="T_ac80f_row2_col6" class="data row2 col6">+5</td>
-<td id="T_ac80f_row2_col7" class="data row2 col7">+36</td>
-<td id="T_ac80f_row2_col8" class="data row2 col8">-3</td>
-<td id="T_ac80f_row2_col9" class="data row2 col9">-11</td>
-<td id="T_ac80f_row2_col10" class="data row2 col10">-11</td>
-<td id="T_ac80f_row2_col11" class="data row2 col11">+20</td>
+<td id="T_22fb0_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">2022-2026</td>
+<td id="T_22fb0_row2_col0" class="data row2 col0">-1</td>
+<td id="T_22fb0_row2_col1" class="data row2 col1">-15</td>
+<td id="T_22fb0_row2_col2" class="data row2 col2">-11</td>
+<td id="T_22fb0_row2_col3" class="data row2 col3">-4</td>
+<td id="T_22fb0_row2_col4" class="data row2 col4">+0</td>
+<td id="T_22fb0_row2_col5" class="data row2 col5">+6</td>
+<td id="T_22fb0_row2_col6" class="data row2 col6">+5</td>
+<td id="T_22fb0_row2_col7" class="data row2 col7">+36</td>
+<td id="T_22fb0_row2_col8" class="data row2 col8">-3</td>
+<td id="T_22fb0_row2_col9" class="data row2 col9">-11</td>
+<td id="T_22fb0_row2_col10" class="data row2 col10">-11</td>
+<td id="T_22fb0_row2_col11" class="data row2 col11">+20</td>
 </tr>
 </tbody>
 </table>
@@ -1420,72 +1429,72 @@ Table 4: Backtest metrics. Bias is the mean signed percentage error (positive m
 <style type="text/css">
 </style>
 
-<table id="T_75074" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
+<table id="T_2eae8" class="do-not-create-environment cell caption-top" data-quarto-postprocess="true">
 <thead>
 <tr class="header">
-<th id="T_75074_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Data</th>
-<th id="T_75074_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Model</th>
-<th id="T_75074_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">MAPE (%)</th>
-<th id="T_75074_level0_col3" class="col_heading level0 col3" data-quarto-table-cell-role="th">Bias (%)</th>
-<th id="T_75074_level0_col4" class="col_heading level0 col4" data-quarto-table-cell-role="th">80% interval coverage (%)</th>
+<th id="T_2eae8_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">Data</th>
+<th id="T_2eae8_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">Model</th>
+<th id="T_2eae8_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">MAPE (%)</th>
+<th id="T_2eae8_level0_col3" class="col_heading level0 col3" data-quarto-table-cell-role="th">Bias (%)</th>
+<th id="T_2eae8_level0_col4" class="col_heading level0 col4" data-quarto-table-cell-role="th">80% interval coverage (%)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td id="T_75074_row0_col0" class="data row0 col0">Raw data</td>
-<td id="T_75074_row0_col1" class="data row0 col1">Seasonal naive</td>
-<td id="T_75074_row0_col2" class="data row0 col2">2.37</td>
-<td id="T_75074_row0_col3" class="data row0 col3">+0.13</td>
-<td id="T_75074_row0_col4" class="data row0 col4">100</td>
+<td id="T_2eae8_row0_col0" class="data row0 col0">Raw data</td>
+<td id="T_2eae8_row0_col1" class="data row0 col1">Seasonal naive</td>
+<td id="T_2eae8_row0_col2" class="data row0 col2">2.37</td>
+<td id="T_2eae8_row0_col3" class="data row0 col3">+0.13</td>
+<td id="T_2eae8_row0_col4" class="data row0 col4">100</td>
 </tr>
 <tr class="even">
-<td id="T_75074_row1_col0" class="data row1 col0">Raw data</td>
-<td id="T_75074_row1_col1" class="data row1 col1">ETS</td>
-<td id="T_75074_row1_col2" class="data row1 col2">7.86</td>
-<td id="T_75074_row1_col3" class="data row1 col3">+6.26</td>
-<td id="T_75074_row1_col4" class="data row1 col4">100</td>
+<td id="T_2eae8_row1_col0" class="data row1 col0">Raw data</td>
+<td id="T_2eae8_row1_col1" class="data row1 col1">ETS</td>
+<td id="T_2eae8_row1_col2" class="data row1 col2">7.86</td>
+<td id="T_2eae8_row1_col3" class="data row1 col3">+6.26</td>
+<td id="T_2eae8_row1_col4" class="data row1 col4">100</td>
 </tr>
 <tr class="odd">
-<td id="T_75074_row2_col0" class="data row2 col0">Raw data</td>
-<td id="T_75074_row2_col1" class="data row2 col1">ARIMA</td>
-<td id="T_75074_row2_col2" class="data row2 col2">5.53</td>
-<td id="T_75074_row2_col3" class="data row2 col3">+2.21</td>
-<td id="T_75074_row2_col4" class="data row2 col4">100</td>
+<td id="T_2eae8_row2_col0" class="data row2 col0">Raw data</td>
+<td id="T_2eae8_row2_col1" class="data row2 col1">ARIMA</td>
+<td id="T_2eae8_row2_col2" class="data row2 col2">5.53</td>
+<td id="T_2eae8_row2_col3" class="data row2 col3">+2.21</td>
+<td id="T_2eae8_row2_col4" class="data row2 col4">100</td>
 </tr>
 <tr class="even">
-<td id="T_75074_row3_col0" class="data row3 col0">Raw data</td>
-<td id="T_75074_row3_col1" class="data row3 col1">Theta</td>
-<td id="T_75074_row3_col2" class="data row3 col2">6.21</td>
-<td id="T_75074_row3_col3" class="data row3 col3">+2.69</td>
-<td id="T_75074_row3_col4" class="data row3 col4">100</td>
+<td id="T_2eae8_row3_col0" class="data row3 col0">Raw data</td>
+<td id="T_2eae8_row3_col1" class="data row3 col1">Theta</td>
+<td id="T_2eae8_row3_col2" class="data row3 col2">6.21</td>
+<td id="T_2eae8_row3_col3" class="data row3 col3">+2.69</td>
+<td id="T_2eae8_row3_col4" class="data row3 col4">100</td>
 </tr>
 <tr class="odd">
-<td id="T_75074_row4_col0" class="data row4 col0">Covid neutralised</td>
-<td id="T_75074_row4_col1" class="data row4 col1">Seasonal naive</td>
-<td id="T_75074_row4_col2" class="data row4 col2">2.37</td>
-<td id="T_75074_row4_col3" class="data row4 col3">+0.13</td>
-<td id="T_75074_row4_col4" class="data row4 col4">100</td>
+<td id="T_2eae8_row4_col0" class="data row4 col0">Covid neutralised</td>
+<td id="T_2eae8_row4_col1" class="data row4 col1">Seasonal naive</td>
+<td id="T_2eae8_row4_col2" class="data row4 col2">2.37</td>
+<td id="T_2eae8_row4_col3" class="data row4 col3">+0.13</td>
+<td id="T_2eae8_row4_col4" class="data row4 col4">100</td>
 </tr>
 <tr class="even">
-<td id="T_75074_row5_col0" class="data row5 col0">Covid neutralised</td>
-<td id="T_75074_row5_col1" class="data row5 col1">ETS</td>
-<td id="T_75074_row5_col2" class="data row5 col2">3.01</td>
-<td id="T_75074_row5_col3" class="data row5 col3">+2.15</td>
-<td id="T_75074_row5_col4" class="data row5 col4">89</td>
+<td id="T_2eae8_row5_col0" class="data row5 col0">Covid neutralised</td>
+<td id="T_2eae8_row5_col1" class="data row5 col1">ETS</td>
+<td id="T_2eae8_row5_col2" class="data row5 col2">3.01</td>
+<td id="T_2eae8_row5_col3" class="data row5 col3">+2.15</td>
+<td id="T_2eae8_row5_col4" class="data row5 col4">89</td>
 </tr>
 <tr class="odd">
-<td id="T_75074_row6_col0" class="data row6 col0">Covid neutralised</td>
-<td id="T_75074_row6_col1" class="data row6 col1">ARIMA</td>
-<td id="T_75074_row6_col2" class="data row6 col2">3.82</td>
-<td id="T_75074_row6_col3" class="data row6 col3">+2.73</td>
-<td id="T_75074_row6_col4" class="data row6 col4">86</td>
+<td id="T_2eae8_row6_col0" class="data row6 col0">Covid neutralised</td>
+<td id="T_2eae8_row6_col1" class="data row6 col1">ARIMA</td>
+<td id="T_2eae8_row6_col2" class="data row6 col2">3.82</td>
+<td id="T_2eae8_row6_col3" class="data row6 col3">+2.73</td>
+<td id="T_2eae8_row6_col4" class="data row6 col4">86</td>
 </tr>
 <tr class="even">
-<td id="T_75074_row7_col0" class="data row7 col0">Covid neutralised</td>
-<td id="T_75074_row7_col1" class="data row7 col1">Theta</td>
-<td id="T_75074_row7_col2" class="data row7 col2">5.03</td>
-<td id="T_75074_row7_col3" class="data row7 col3">+2.09</td>
-<td id="T_75074_row7_col4" class="data row7 col4">72</td>
+<td id="T_2eae8_row7_col0" class="data row7 col0">Covid neutralised</td>
+<td id="T_2eae8_row7_col1" class="data row7 col1">Theta</td>
+<td id="T_2eae8_row7_col2" class="data row7 col2">5.03</td>
+<td id="T_2eae8_row7_col3" class="data row7 col3">+2.09</td>
+<td id="T_2eae8_row7_col4" class="data row7 col4">72</td>
 </tr>
 </tbody>
 </table>

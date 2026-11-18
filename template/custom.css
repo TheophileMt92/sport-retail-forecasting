@@ -52,9 +52,19 @@ h2 {
   font-size: 1.75rem;
   text-transform: uppercase;
   letter-spacing: .01em;
-  padding: .15rem 0 .15rem .9rem;
-  border-left: 6px solid var(--cobalt);
 }
+/* section marker: a pseudo-element, because top-level h2 also receive the
+   column gutter padding, which would detach a border-left from the text */
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: .95em;
+  margin-right: .7rem;
+  vertical-align: -0.08em;
+  background: var(--cobalt);
+}
+.callout h2::before, #toc-title::before, nav[role="doc-toc"] h2::before { display: none; }
 h3 { font-size: 1.3rem; color: var(--cobalt); }
 h4 { font-size: 1.05rem; color: var(--text-secondary); }
 
