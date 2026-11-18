@@ -345,7 +345,7 @@ for i, (c, gc) in enumerate(gcv.groupby("cutoff")):
     ax.plot(gc["ds"], gc["q0.5"], color=SURF, lw=2.2, label="Chronos-2 median" if i == 0 else None)
     ax.axvline(c, color=GREY, ls=":", lw=1)
 ax.set_ylabel("Index (2021 = 100)")
-ax.legend(loc="upper left")
+ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3)
 plt.show()
 ```
 
