@@ -1,6 +1,6 @@
 ---
 title: "Sporting goods retail in France: 27 years of monthly demand"
-subtitle: "Stationarity, decomposition, drift, anomaly detection and forecast benchmarking on public INSEE data"
+subtitle: "Stationarity, decomposition, drift, anomaly detection and forecast benchmarking, from seasonal naive to Chronos-2, on public INSEE data"
 author: "Théophile L. Mouton"
 date: today
 format:
@@ -132,6 +132,21 @@ best = btc["MAPE (%)"].idxmin()
 best_key = [k for k, v in labels.items() if v == best][0]
 cutoffs = sorted(cvs["Covid neutralised"]["cutoff"].unique())
 
+# Chronos-2 zero-shot results, precomputed by scripts/chronos_backtest.py (needs torch)
+ch = pd.read_csv("data/chronos_backtest.csv", parse_dates=["ds", "cutoff"])
+ch_rows = []
+for variant, gch in ch.groupby("data", sort=False):
+    a, f = gch["y"], gch["q0.5"]
+    ch_rows.append({"Data": variant, "Model": "Chronos-2",
+                    "MAPE (%)": (np.abs(a - f) / a).mean() * 100,
+                    "Bias (%)": ((f - a) / a).mean() * 100,
+                    "80% interval coverage (%)": ((a >= gch["q0.1"]) & (a <= gch["q0.9"])).mean() * 100})
+bt = pd.concat([bt, pd.DataFrame(ch_rows)], ignore_index=True)
+bt["Data"] = pd.Categorical(bt["Data"], ["Raw data", "Covid neutralised"])
+bt = bt.sort_values(["Data"], kind="stable").reset_index(drop=True)
+btc = bt[bt.Data == "Covid neutralised"].set_index("Model")
+btr = bt[bt.Data == "Raw data"].set_index("Model")
+
 # ---- 6. Final forecast ----
 m = make_models()[names.index(best_key)]
 fc = StatsForecast(models=[m], freq="MS", n_jobs=1).forecast(df=sf_df(clean), h=12, level=[80, 95])
@@ -148,6 +163,7 @@ dec_row = fc[fc["ds"].dt.month == 12].iloc[0]
 - **Seasonality is drifting.** August now sits `{python} pct(prof.loc[8, '2022-2026'], 0)` % above trend (versus `{python} pct(prof.loc[8, '2010-2019'], 0)` % in 2010-2019), December has weakened, and the November trough has become shallower.
 - **Covid breaks naive pipelines.** Robust anomaly detection flags the lockdowns (April 2020: `{python} pct(apr20, 0)` % versus expected). Neutralising them cuts the ETS 12-month error from `{python} pct(btr.loc['ETS', 'MAPE (%)'])` % to `{python} pct(btc.loc['ETS', 'MAPE (%)'])` %.
 - **The simplest model wins on a flat market.** In a rolling backtest, the seasonal naive benchmark (`{python} pct(btc.loc['Seasonal naive', 'MAPE (%)'])` % MAPE) beats ETS, ARIMA and Theta.
+- **A foundation model is the most robust and best calibrated.** Used zero-shot, without any training on this series, Chronos-2 reaches `{python} pct(btc.loc['Chronos-2', 'MAPE (%)'])` % MAPE, barely degrades on uncleaned Covid data (`{python} pct(btr.loc['Chronos-2', 'MAPE (%)'])` %), and its 80 % intervals cover `{python} pct(btc.loc['Chronos-2', '80% interval coverage (%)'], 0)` % of outcomes.
 :::
 
 ## Why this analysis
@@ -266,15 +282,15 @@ The seasonal pattern is not fixed. Back-to-school and summer (August) has grown,
 
 ## 5. Forecast benchmarking
 
-Four models from `statsforecast` are compared in a rolling-origin backtest: 12-month horizon, three origins (`{python} ", ".join(pd.Timestamp(c).strftime("%Y-%m") for c in cutoffs)`), each refit on all data available at the origin. Each model is run on the raw series and on a version where March 2020 to May 2021 is replaced by the STL trend plus seasonal estimate.
+Four statistical models from `statsforecast` and one time series foundation model (Chronos-2, zero-shot) are compared in a rolling-origin backtest: 12-month horizon, three origins (`{python} ", ".join(pd.Timestamp(c).strftime("%Y-%m") for c in cutoffs)`), each refit on all data available at the origin. Each model is run on the raw series and on a version where March 2020 to May 2021 is replaced by the STL trend plus seasonal estimate.
 
 ```{python}
 #| label: fig-backtest
 #| fig-cap: "12-month-ahead MAPE by model, raw versus Covid-neutralised history."
-order = ["Seasonal naive", "ETS", "ARIMA", "Theta"]
-yy = np.arange(4)[::-1]
+order = ["Seasonal naive", "ETS", "ARIMA", "Theta", "Chronos-2"]
+yy = np.arange(len(order))[::-1]
 h = 0.38
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(9, 5.8))
 ax.barh(yy + h / 2, btr.loc[order, "MAPE (%)"], h * 0.95, color=GREY, label="Raw data")
 ax.barh(yy - h / 2, btc.loc[order, "MAPE (%)"], h * 0.95, color=SURF, label="Covid neutralised")
 for yi, v in zip(yy, btr.loc[order, "MAPE (%)"]):
@@ -300,6 +316,47 @@ Three lessons:
 2. **On a flat market, seasonal naive is hard to beat.** Once growth stops and seasonality is stable year to year, repeating last year is a strong forecast. Any production model should be benchmarked against it.
 3. **Check calibration, not just accuracy.** Theta's 80 % intervals cover only `{python} pct(btc.loc['Theta', '80% interval coverage (%)'], 0)` % of outcomes, so it is overconfident. Stock decisions depend on the interval, not the point forecast.
 
+### A time series foundation model, zero-shot
+
+[Chronos-2](https://huggingface.co/amazon/chronos-2) is a pretrained forecasting model: it receives the history up to each origin and returns quantile forecasts, with no fitting on this series. It runs on a laptop CPU. The forecasts are precomputed by `scripts/chronos_backtest.py` on exactly the same origins and horizon as the statistical models.
+
+```{python}
+#| label: chronos-code
+#| eval: false
+#| code-fold: false
+from chronos import Chronos2Pipeline
+
+pipe = Chronos2Pipeline.from_pretrained("amazon/chronos-2", device_map="cpu")
+fc = pipe.predict_df(context,                       # history up to the origin
+                     prediction_length=12,
+                     quantile_levels=[0.025, 0.1, 0.5, 0.9, 0.975],
+                     id_column="unique_id", timestamp_column="ds", target="y")
+```
+
+```{python}
+#| label: fig-chronos
+#| fig-cap: "Chronos-2 zero-shot forecasts (median and 80 % interval) at the three backtest origins, Covid-neutralised history, against observed values."
+gcv = ch[ch["data"] == "Covid neutralised"]
+obs = df.loc["2022-06-01":, "brut"]
+fig, ax = plt.subplots()
+ax.plot(obs.index, obs, color=INK2, lw=1.6, label="Observed")
+for i, (c, gc) in enumerate(gcv.groupby("cutoff")):
+    ax.fill_between(gc["ds"], gc["q0.1"], gc["q0.9"], color=FOAM, label="80 % interval" if i == 0 else None)
+    ax.plot(gc["ds"], gc["q0.5"], color=SURF, lw=2.2, label="Chronos-2 median" if i == 0 else None)
+    ax.axvline(c, color=GREY, ls=":", lw=1)
+ax.set_ylabel("Index (2021 = 100)")
+ax.legend(loc="upper left")
+plt.show()
+```
+
+What the foundation model brings:
+
+- **Robustness without manual cleaning.** On raw data its error is `{python} pct(btr.loc['Chronos-2', 'MAPE (%)'])` %, against `{python} pct(btr.loc['ETS', 'MAPE (%)'])` % for ETS. The statistical models need the Covid months to be neutralised by hand; Chronos-2 barely needs it.
+- **Calibrated uncertainty.** Its 80 % intervals cover `{python} pct(btc.loc['Chronos-2', '80% interval coverage (%)'], 0)` % of outcomes, close to nominal, whereas seasonal naive intervals are so wide they cover everything and Theta's are too narrow.
+- **Not a free win on point accuracy.** On this flat aggregate series, repeating last year (`{python} pct(btc.loc['Seasonal naive', 'MAPE (%)'])` %) still beats it. The case for foundation models is strongest at scale, on many short, noisy or new-product series, where hand-tuning each model is impossible. That is also where fine-tuning on internal history pays off.
+
+One caveat: public pretraining corpora may include INSEE series, so a zero-shot result on public data can be optimistic.
+
 ## 6. Forecast to `{python} fc['ds'].max().strftime('%B %Y')`
 
 ```{python}
@@ -323,8 +380,8 @@ The December `{python} dec_row['ds'].year` peak is expected at `{python} pct(dec
 - **Aggregate, value-based series.** This is a national turnover index, not unit sales by product and store. Inflation is mixed with volume, and the hierarchical, intermittent and promotion-driven structure of real assortment data is absent.
 - **Short backtest.** Three yearly origins give 36 forecast points. Results are indicative, not a definitive model ranking.
 - **Covid neutralisation uses the full-sample STL fit.** The imputed months lie before all backtest origins, so leakage is minimal, but a strictly causal version would refit STL at each origin.
-- **Next steps:** exogenous drivers (weather, calendar, Black Friday and Olympics dummies), a deflated volume series, and zero-shot time series foundation models (Chronos, TimesFM) compared against the same seasonal naive baseline.
+- **Next steps:** exogenous drivers (weather, calendar, Black Friday and Olympics dummies) as Chronos-2 covariates, a deflated volume series, other foundation models (TimesFM, Moirai), and an ensemble of seasonal naive and Chronos-2.
 
 ## Reproducibility
 
-Data: INSEE, *Indice de chiffre d'affaires - Commerce de détail d'articles de sport en magasin spécialisé* (NAF rév. 2, 47.64), series 010770520 (raw) and 010770580 (seasonally and calendar adjusted), retrieved from the INSEE BDM SDMX API. `scripts/fetch_insee.py` refreshes the data, and `quarto render report.qmd` rebuilds this page.
+Data: INSEE, *Indice de chiffre d'affaires - Commerce de détail d'articles de sport en magasin spécialisé* (NAF rév. 2, 47.64), series 010770520 (raw) and 010770580 (seasonally and calendar adjusted), retrieved from the INSEE BDM SDMX API. `scripts/fetch_insee.py` refreshes the data, `scripts/chronos_backtest.py` recomputes the Chronos-2 forecasts (separate environment with PyTorch, see `requirements-chronos.txt`), and `quarto render report.qmd` rebuilds this page.

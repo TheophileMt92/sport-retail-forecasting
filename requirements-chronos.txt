@@ -1,0 +1,6 @@
+numpy<2
+pandas<2.3
+statsmodels
+torch==2.2.2
+transformers>=4.48,<4.57
+chronos-forecasting>=2.0
