@@ -170,18 +170,19 @@ dec_row = fc[fc["ds"].dt.month == 12].iloc[0]
 
 Demand forecasting in retail starts with understanding the series: is it stationary, how strong and how stable is the seasonality, which observations are anomalies, and has the process drifted? Product-level sales are confidential, but INSEE publishes a monthly turnover index for **retail sale of sporting equipment in specialised stores** (NAF rev. 2 class 47.64). It covers `{python} first.strftime('%B %Y')` to `{python} last.strftime('%B %Y')`, which makes it a good public testbed for the full workflow: stationarity tests, decomposition, anomaly detection, drift detection and honest forecast evaluation.
 
-The index is in value (turnover, current euros), unadjusted, base 2021 = 100. All modelling is done on the log scale.
+**How to read the index.** Each value is the turnover of one month (sales, in current euros) of all stores specialised in sporting goods in France, divided by the average monthly turnover of 2021 and multiplied by 100. A value of 150 means sales 50 % above an average month of 2021; a value of 50 means half. Because it is a ratio, it shows changes over time, not the size of the market in euros. The series is unadjusted: it keeps the seasonal pattern and calendar effects, which are what we want to model. All modelling is done on the log scale.
 
 ```{python}
 #| label: fig-raw
-#| fig-cap: "Monthly turnover index and its robust STL trend. Orange points are Covid-period anomalies (|robust z| > 3.5)."
+#| fig-cap: "Monthly turnover of sporting goods stores in France (index, 100 = average month of 2021, current euros), with its robust STL trend. The saw-tooth pattern is the yearly cycle: peaks every August and December, troughs in February and October-November. Orange points are Covid-period anomalies (|robust z| > 3.5)."
 fig, ax = plt.subplots()
-ax.plot(df.index, df["brut"], color=GREY, lw=1, label="Monthly turnover index")
-ax.plot(tr.index, tr, color=SURF, lw=2.5, label="Trend (robust STL)")
+ax.plot(df.index, df["brut"], color=GREY, lw=1, label="Turnover of the month")
+ax.plot(tr.index, tr, color=SURF, lw=2.5, label="Trend (seasonality and noise removed)")
 a = anom[covid_mask]
 ax.scatter(a.index, np.exp(a["obs"]), s=40, color=ORANGE, edgecolor="white", lw=1.5, zorder=5,
            label="Covid anomalies")
-ax.set_ylabel("Index (2021 = 100)")
+ax.axhline(100, color=INK2, lw=0.8, ls=":")
+ax.set_ylabel("Turnover index (100 = average month of 2021)")
 ax.legend(loc="upper left")
 plt.show()
 ```
@@ -277,6 +278,15 @@ t = prof.copy()
 t.index = months
 t.T.style.format("{:+.0f}")
 ```
+
+**What drives the within-year pattern.** The seasonal component is measured, the causes below are the usual explanations for sporting goods retail, not tested here:
+
+- **August (+36 %)**: back to school and the start of the club season (school sports kits, sports club registrations in September), plus summer holidays (outdoor, swimming, cycling, camping).
+- **December (+20 %)**: Christmas gifts.
+- **June-July (+5 to +6 %)**: start of summer and summer sales (soldes) from late June.
+- **February (-15 %)**: shortest month and post-holiday spending lull; winter sales in January partly pull purchases forward.
+- **October-November (-11 %)**: quiet period between back-to-school and Christmas, now partly filled by Black Friday.
+- **Calendar effects**: because the series is unadjusted, the number of days and of Saturdays in each month also moves the monthly figures.
 
 The seasonal pattern is not fixed. Back-to-school and summer (August) has grown, while December has lost weight, and November has become less of a trough. Black Friday shifting spend from December to November is a plausible explanation, though it is not tested here. For a forecasting pipeline this means seasonal factors estimated on long histories will be biased, and models that let seasonality evolve, or that weight recent years, should be preferred.
 
