@@ -1,0 +1,330 @@
+---
+title: "Sporting goods retail in France: 27 years of monthly demand"
+subtitle: "Stationarity, decomposition, drift, anomaly detection and forecast benchmarking on public INSEE data"
+author: "Théophile L. Mouton"
+date: today
+format:
+  html:
+    output-file: index.html
+    embed-resources: true
+    code-fold: true
+    code-summary: "Show code"
+    css: template/custom.css
+    include-before-body: template/header.html
+    include-after-body: template/footer.html
+    theme: none
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    fig-align: center
+jupyter: python3
+execute:
+  echo: true
+  message: false
+  warning: false
+---
+
+```{python}
+#| label: setup
+#| echo: false
+import warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from statsmodels.tsa.stattools import adfuller, kpss
+from statsmodels.tsa.seasonal import STL
+import ruptures as rpt
+from statsforecast import StatsForecast
+from statsforecast.models import SeasonalNaive, AutoETS, AutoARIMA, AutoTheta
+
+# DataSphere palette
+DEEP, MID, SURF, LIGHT, FOAM = "#062d4a", "#0d4f7a", "#1a7fa8", "#4eb8d4", "#c8eaf4"
+GREY, ORANGE, INK2, GRID = "#b5b4ae", "#eb6834", "#445566", "#e6e5e1"
+plt.rcParams.update({
+    "figure.figsize": (9, 5), "figure.dpi": 130, "font.size": 11,
+    "axes.edgecolor": INK2, "axes.labelcolor": INK2,
+    "xtick.color": INK2, "ytick.color": INK2,
+    "axes.spines.top": False, "axes.spines.right": False,
+    "axes.grid": True, "grid.color": GRID, "axes.axisbelow": True,
+    "legend.frameon": False,
+})
+
+def pct(x, d=1):
+    return f"{x:.{d}f}"
+```
+
+```{python}
+#| label: analysis
+#| echo: false
+# ---- Data ----
+df = pd.read_csv("data/insee_ica_4764.csv", parse_dates=["period"])
+df = df.rename(columns={"period": "ds"}).set_index("ds").asfreq("MS")
+y = np.log(df["brut"])
+first, last = df.index.min(), df.index.max()
+
+# ---- 1. Stationarity ----
+def tests(s):
+    s = s.dropna()
+    return adfuller(s, autolag="AIC")[1], kpss(s, regression="c", nlags="auto")[1]
+stat = pd.DataFrame(
+    [tests(y), tests(y.diff()), tests(y.diff(12)), tests(y.diff(12).diff())],
+    index=["log level", "first difference", "seasonal difference (12)", "both differences"],
+    columns=["ADF p-value", "KPSS p-value"],
+)
+
+# ---- 2. Robust STL ----
+stl = STL(y, period=12, robust=True, seasonal=13).fit()
+dec = pd.DataFrame({"obs": y, "trend": stl.trend, "seasonal": stl.seasonal, "resid": stl.resid})
+
+# ---- 3. Anomalies: robust z-score of STL residuals ----
+r = dec["resid"]
+mad = np.median(np.abs(r - r.median())) * 1.4826
+dec["z"] = (r - r.median()) / mad
+Z = 3.5
+anom = dec[dec["z"].abs() > Z].copy()
+anom["vs_expected_pct"] = (np.exp(anom["resid"]) - 1) * 100
+covid_mask = (anom.index >= "2020-03-01") & (anom.index <= "2021-12-01")
+apr20 = anom.loc["2020-04-01", "vs_expected_pct"]
+
+# ---- 4. Drift ----
+tr = np.exp(dec["trend"])
+ann = tr.resample("YS").mean()
+cagr_pre = ((ann.loc["2019"].iloc[0] / ann.loc["2000"].iloc[0]) ** (1 / 19) - 1) * 100
+cagr_post = ((ann.loc["2025"].iloc[0] / ann.loc["2022"].iloc[0]) ** (1 / 3) - 1) * 100
+g = dec["trend"].diff(12).dropna()
+bk = rpt.Pelt(model="rbf").fit(g.values).predict(pen=8)
+breaks = [g.index[b - 1] for b in bk[:-1]]
+seas = dec["seasonal"].groupby([dec.index.year, dec.index.month]).mean().unstack()
+prof = pd.DataFrame({
+    "1999-2009": (np.exp(seas.loc[1999:2009].mean()) - 1) * 100,
+    "2010-2019": (np.exp(seas.loc[2010:2019].mean()) - 1) * 100,
+    "2022-2026": (np.exp(seas.loc[2022:2026].mean()) - 1) * 100,
+})
+
+# ---- 5. Backtest ----
+clean = y.copy()
+covid = (y.index >= "2020-03-01") & (y.index <= "2021-05-01")
+clean[covid] = (dec["trend"] + dec["seasonal"])[covid]
+def sf_df(s):
+    return pd.DataFrame({"unique_id": "sport", "ds": s.index, "y": s.values})
+names = ["SeasonalNaive", "AutoETS", "AutoARIMA", "AutoTheta"]
+labels = {"SeasonalNaive": "Seasonal naive", "AutoETS": "ETS", "AutoARIMA": "ARIMA", "AutoTheta": "Theta"}
+def make_models():
+    return [SeasonalNaive(12), AutoETS(season_length=12), AutoARIMA(season_length=12), AutoTheta(season_length=12)]
+rows, cvs = [], {}
+for variant, series in [("Raw data", y), ("Covid neutralised", clean)]:
+    sf = StatsForecast(models=make_models(), freq="MS", n_jobs=1)
+    cv = sf.cross_validation(df=sf_df(series), h=12, n_windows=3, step_size=12, level=[80])
+    cvs[variant] = cv
+    for m in names:
+        a, f = np.exp(cv["y"]), np.exp(cv[m])
+        lo, hi = np.exp(cv[f"{m}-lo-80"]), np.exp(cv[f"{m}-hi-80"])
+        rows.append({"Data": variant, "Model": labels[m],
+                     "MAPE (%)": (np.abs(a - f) / a).mean() * 100,
+                     "Bias (%)": ((f - a) / a).mean() * 100,
+                     "80% interval coverage (%)": ((a >= lo) & (a <= hi)).mean() * 100})
+bt = pd.DataFrame(rows)
+btc = bt[bt.Data == "Covid neutralised"].set_index("Model")
+btr = bt[bt.Data == "Raw data"].set_index("Model")
+best = btc["MAPE (%)"].idxmin()
+best_key = [k for k, v in labels.items() if v == best][0]
+cutoffs = sorted(cvs["Covid neutralised"]["cutoff"].unique())
+
+# ---- 6. Final forecast ----
+m = make_models()[names.index(best_key)]
+fc = StatsForecast(models=[m], freq="MS", n_jobs=1).forecast(df=sf_df(clean), h=12, level=[80, 95])
+for c in fc.columns:
+    if c not in ("unique_id", "ds"):
+        fc[c] = np.exp(fc[c])
+dec_row = fc[fc["ds"].dt.month == 12].iloc[0]
+```
+
+::: {.callout-note}
+## Key findings
+
+- **Growth has stalled.** The trend grew by `{python} pct(cagr_pre)` % a year between 2000 and 2019, but only `{python} pct(cagr_post)` % a year between 2022 and 2025, in current euros, so likely a decline in volume once inflation is accounted for.
+- **Seasonality is drifting.** August now sits `{python} pct(prof.loc[8, '2022-2026'], 0)` % above trend (versus `{python} pct(prof.loc[8, '2010-2019'], 0)` % in 2010-2019), December has weakened, and the November trough has become shallower.
+- **Covid breaks naive pipelines.** Robust anomaly detection flags the lockdowns (April 2020: `{python} pct(apr20, 0)` % versus expected). Neutralising them cuts the ETS 12-month error from `{python} pct(btr.loc['ETS', 'MAPE (%)'])` % to `{python} pct(btc.loc['ETS', 'MAPE (%)'])` %.
+- **The simplest model wins on a flat market.** In a rolling backtest, the seasonal naive benchmark (`{python} pct(btc.loc['Seasonal naive', 'MAPE (%)'])` % MAPE) beats ETS, ARIMA and Theta.
+:::
+
+## Why this analysis
+
+Demand forecasting in retail starts with understanding the series: is it stationary, how strong and how stable is the seasonality, which observations are anomalies, and has the process drifted? Product-level sales are confidential, but INSEE publishes a monthly turnover index for **retail sale of sporting equipment in specialised stores** (NAF rev. 2 class 47.64). It covers `{python} first.strftime('%B %Y')` to `{python} last.strftime('%B %Y')`, which makes it a good public testbed for the full workflow: stationarity tests, decomposition, anomaly detection, drift detection and honest forecast evaluation.
+
+The index is in value (turnover, current euros), unadjusted, base 2021 = 100. All modelling is done on the log scale.
+
+```{python}
+#| label: fig-raw
+#| fig-cap: "Monthly turnover index and its robust STL trend. Orange points are Covid-period anomalies (|robust z| > 3.5)."
+fig, ax = plt.subplots()
+ax.plot(df.index, df["brut"], color=GREY, lw=1, label="Monthly turnover index")
+ax.plot(tr.index, tr, color=SURF, lw=2.5, label="Trend (robust STL)")
+a = anom[covid_mask]
+ax.scatter(a.index, np.exp(a["obs"]), s=40, color=ORANGE, edgecolor="white", lw=1.5, zorder=5,
+           label="Covid anomalies")
+ax.set_ylabel("Index (2021 = 100)")
+ax.legend(loc="upper left")
+plt.show()
+```
+
+## 1. Stationarity
+
+The augmented Dickey-Fuller test (null hypothesis: unit root) and the KPSS test (null hypothesis: stationarity) are complementary, so they are read together.
+
+```{python}
+#| label: tbl-stationarity
+#| tbl-cap: "Unit root (ADF) and stationarity (KPSS) tests on the log series. KPSS p-values are truncated at 0.01 and 0.10."
+stat.style.format("{:.3f}")
+```
+
+The log level is non-stationary (ADF does not reject a unit root, KPSS rejects stationarity). After first or seasonal differencing both tests agree on stationarity. This points to a stochastic trend plus a strong annual cycle: models need either differencing (ARIMA) or an explicit trend and seasonal state (ETS).
+
+## 2. Decomposition
+
+A robust STL decomposition (period 12) separates trend, seasonality and remainder. The robust weights stop the Covid months from distorting the trend and seasonal estimates.
+
+```{python}
+#| label: fig-stl
+#| fig-cap: "Robust STL decomposition of the log turnover index."
+fig, axes = plt.subplots(4, 1, figsize=(9, 8), sharex=True)
+for ax, col, lab, c in zip(axes, ["obs", "trend", "seasonal", "resid"],
+                           ["Observed (log)", "Trend", "Seasonal", "Remainder"],
+                           [GREY, SURF, MID, DEEP]):
+    if col == "resid":
+        ax.bar(dec.index, dec[col], width=25, color=c)
+    else:
+        ax.plot(dec.index, dec[col], color=c, lw=1.5)
+    ax.set_ylabel(lab, fontsize=10)
+plt.tight_layout()
+plt.show()
+```
+
+## 3. Anomaly detection
+
+Anomalies are flagged on the STL remainder using a robust z-score (median and MAD rather than mean and standard deviation), with a threshold of |z| > `{python} Z`. A robust scale matters here: a few extreme Covid months would otherwise inflate the standard deviation and hide everything else.
+
+```{python}
+#| label: tbl-anomalies
+#| tbl-cap: "Months flagged as anomalous, with the deviation from the trend plus seasonal expectation."
+out = anom[["z", "vs_expected_pct"]].copy()
+out.index = out.index.strftime("%Y-%m")
+out.columns = ["Robust z-score", "Deviation from expected (%)"]
+out.style.format("{:.1f}")
+```
+
+The Covid lockdowns dominate (March-April 2020, November 2020, April 2021), followed by catch-up months that are just as anomalous in the other direction. Isolated pre-Covid flags are much smaller (mostly under 10 %) and plausibly linked to weather, calendar or promotional effects.
+
+## 4. Drift
+
+### Trend
+
+```{python}
+#| label: fig-growth
+#| fig-cap: "Year-on-year growth of the STL trend. Dashed lines mark change points detected with PELT."
+fig, ax = plt.subplots()
+gg = (np.exp(g) - 1) * 100
+ax.plot(gg.index, gg, color=SURF, lw=2)
+ax.axhline(0, color=INK2, lw=0.8)
+for b in breaks:
+    ax.axvline(b, color=ORANGE, ls="--", lw=1)
+ax.set_ylabel("Trend growth, year on year (%)")
+plt.show()
+```
+
+Change-point detection (PELT, RBF cost) on the year-on-year trend growth finds breaks at `{python} ", ".join(b.strftime("%Y-%m") for b in breaks)`. The last regime, since 2023, is a plateau: `{python} pct(cagr_post)` % a year against `{python} pct(cagr_pre)` % on average before Covid.
+
+### Seasonality
+
+```{python}
+#| label: fig-seasonal
+#| fig-cap: "Average seasonal component by month and period (deviation from trend, %)."
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+x = np.arange(12)
+w = 0.27
+fig, ax = plt.subplots()
+for i, (col, c) in enumerate(zip(prof.columns, [FOAM, LIGHT, SURF])):
+    ax.bar(x + (i - 1) * w, prof[col], w * 0.95, color=c, label=col)
+ax.axhline(0, color=INK2, lw=0.8)
+ax.set_xticks(x, months)
+ax.set_ylabel("Deviation from trend (%)")
+ax.legend(loc="upper left")
+plt.show()
+```
+
+```{python}
+#| label: tbl-seasonal
+#| tbl-cap: "Seasonal profile by period (deviation from trend, %)."
+t = prof.copy()
+t.index = months
+t.T.style.format("{:+.0f}")
+```
+
+The seasonal pattern is not fixed. Back-to-school and summer (August) has grown, while December has lost weight, and November has become less of a trough. Black Friday shifting spend from December to November is a plausible explanation, though it is not tested here. For a forecasting pipeline this means seasonal factors estimated on long histories will be biased, and models that let seasonality evolve, or that weight recent years, should be preferred.
+
+## 5. Forecast benchmarking
+
+Four models from `statsforecast` are compared in a rolling-origin backtest: 12-month horizon, three origins (`{python} ", ".join(pd.Timestamp(c).strftime("%Y-%m") for c in cutoffs)`), each refit on all data available at the origin. Each model is run on the raw series and on a version where March 2020 to May 2021 is replaced by the STL trend plus seasonal estimate.
+
+```{python}
+#| label: fig-backtest
+#| fig-cap: "12-month-ahead MAPE by model, raw versus Covid-neutralised history."
+order = ["Seasonal naive", "ETS", "ARIMA", "Theta"]
+yy = np.arange(4)[::-1]
+h = 0.38
+fig, ax = plt.subplots()
+ax.barh(yy + h / 2, btr.loc[order, "MAPE (%)"], h * 0.95, color=GREY, label="Raw data")
+ax.barh(yy - h / 2, btc.loc[order, "MAPE (%)"], h * 0.95, color=SURF, label="Covid neutralised")
+for yi, v in zip(yy, btr.loc[order, "MAPE (%)"]):
+    ax.text(v + 0.1, yi + h / 2, f"{v:.1f}", va="center", fontsize=10, color=INK2)
+for yi, v in zip(yy, btc.loc[order, "MAPE (%)"]):
+    ax.text(v + 0.1, yi - h / 2, f"{v:.1f}", va="center", fontsize=10)
+ax.set_yticks(yy, order)
+ax.set_xlabel("MAPE (%)")
+ax.grid(axis="y", visible=False)
+ax.legend(loc="lower right")
+plt.show()
+```
+
+```{python}
+#| label: tbl-backtest
+#| tbl-cap: "Backtest metrics. Bias is the mean signed percentage error (positive means over-forecasting)."
+bt.style.format({"MAPE (%)": "{:.2f}", "Bias (%)": "{:+.2f}", "80% interval coverage (%)": "{:.0f}"}).hide(axis="index")
+```
+
+Three lessons:
+
+1. **Cleaning the Covid period matters more than the choice of model.** On raw data, ETS over-forecasts by about `{python} pct(btr.loc['ETS', 'Bias (%)'], 0)` %, most likely because it reads the 2020-2022 rebound as trend. Neutralising those months cuts its error by a factor of `{python} pct(btr.loc['ETS', 'MAPE (%)'] / btc.loc['ETS', 'MAPE (%)'])`.
+2. **On a flat market, seasonal naive is hard to beat.** Once growth stops and seasonality is stable year to year, repeating last year is a strong forecast. Any production model should be benchmarked against it.
+3. **Check calibration, not just accuracy.** Theta's 80 % intervals cover only `{python} pct(btc.loc['Theta', '80% interval coverage (%)'], 0)` % of outcomes, so it is overconfident. Stock decisions depend on the interval, not the point forecast.
+
+## 6. Forecast to `{python} fc['ds'].max().strftime('%B %Y')`
+
+```{python}
+#| label: fig-forecast
+#| fig-cap: "Twelve-month forecast from the best backtested model, with 80 % and 95 % prediction intervals."
+hist = df.loc["2022-01-01":, "brut"]
+fig, ax = plt.subplots()
+ax.plot(hist.index, hist, color=INK2, lw=1.8, label="Observed")
+ax.fill_between(fc["ds"], fc[f"{best_key}-lo-95"], fc[f"{best_key}-hi-95"], color=FOAM, label="95 % interval")
+ax.fill_between(fc["ds"], fc[f"{best_key}-lo-80"], fc[f"{best_key}-hi-80"], color=LIGHT, label="80 % interval")
+ax.plot(fc["ds"], fc[best_key], color=SURF, lw=2.5, label=f"Forecast ({best.lower()})")
+ax.set_ylabel("Index (2021 = 100)")
+ax.legend(loc="upper left")
+plt.show()
+```
+
+The December `{python} dec_row['ds'].year` peak is expected at `{python} pct(dec_row[best_key], 0)` (80 % interval `{python} pct(dec_row[f"{best_key}-lo-80"], 0)` to `{python} pct(dec_row[f"{best_key}-hi-80"], 0)`).
+
+## Limitations and next steps
+
+- **Aggregate, value-based series.** This is a national turnover index, not unit sales by product and store. Inflation is mixed with volume, and the hierarchical, intermittent and promotion-driven structure of real assortment data is absent.
+- **Short backtest.** Three yearly origins give 36 forecast points. Results are indicative, not a definitive model ranking.
+- **Covid neutralisation uses the full-sample STL fit.** The imputed months lie before all backtest origins, so leakage is minimal, but a strictly causal version would refit STL at each origin.
+- **Next steps:** exogenous drivers (weather, calendar, Black Friday and Olympics dummies), a deflated volume series, and zero-shot time series foundation models (Chronos, TimesFM) compared against the same seasonal naive baseline.
+
+## Reproducibility
+
+Data: INSEE, *Indice de chiffre d'affaires - Commerce de détail d'articles de sport en magasin spécialisé* (NAF rév. 2, 47.64), series 010770520 (raw) and 010770580 (seasonally and calendar adjusted), retrieved from the INSEE BDM SDMX API. `scripts/fetch_insee.py` refreshes the data, and `quarto render report.qmd` rebuilds this page.
