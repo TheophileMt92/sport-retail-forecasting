@@ -457,8 +457,8 @@ lt_smooth = deseas("AutoETS")
 
 ```{python}
 #| label: fig-forecast
-#| fig-cap: "Five-year outlook: monthly turnover index with its long-term trend, extended by a damped-trend ETS forecast with 80 % and 95 % prediction intervals."
-fig, ax = poster("Sporting goods stores in France:", "the plateau is set to last",
+#| fig-cap: "Five-year outlook: monthly turnover index with its long-term trend, extended by a damped-trend ETS forecast. Shaded bands are the 80 % and 95 % prediction intervals smoothed around the forecast trend (12-month centred average). The forecast extends the current regime, without covariates: it is a scenario, not a prediction of the drivers."
+fig, ax = poster("Sporting goods stores in France:", "a plateau that could last",
                  f"Monthly sales of specialised sporting goods stores, 1999 to {last.year}, and a five-year forecast\n"
                  f"to {fc_lt.index[-1].strftime('%B %Y')} (damped-trend ETS, Covid months neutralised). Index: 100 = average\n"
                  "month of 2021, current euros. Shaded: 80 % and 95 % intervals around the forecast trend.")
